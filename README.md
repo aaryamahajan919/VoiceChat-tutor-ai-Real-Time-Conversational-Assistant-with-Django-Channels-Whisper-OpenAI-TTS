@@ -62,7 +62,7 @@ voicechat_tutor/
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/your-username/voicechat-tutor.git
+git clone https://github.com/aaryamahajan919/voicechat-tutor.git
 cd voicechat-tutor
 ```
 
