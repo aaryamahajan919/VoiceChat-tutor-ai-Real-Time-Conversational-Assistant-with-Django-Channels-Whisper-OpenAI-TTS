@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>VoiceChat Tutor</title>
+</head>
+<body>
+  <h1>🎤 VoiceChat Tutor – AI Assistant</h1>
+  <button id="start">🎙️ Start Speaking</button>
+  <p><strong>You said:</strong> <span id="transcript"></span></p>
+  <p><strong>AI replied:</strong> <span id="reply"></span></p>
+  <audio id="responseAudio" controls></audio>
+
+  <script>
+    const startBtn = document.getElementById("start");
+    const transcript = document.getElementById("transcript");
+    const reply = document.getElementById("reply");
+    const audioPlayer = document.getElementById("responseAudio");
+
+    const ws = new WebSocket("ws://localhost:8000/ws/voice/");
+
+    let mediaRecorder;
+
+    startBtn.onclick = async () => {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaRecorder = new MediaRecorder(stream);
+      mediaRecorder.start();
+
+      let chunks = [];
+
+      mediaRecorder.ondataavailable = e => chunks.push(e.data);
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(chunks, { type: 'audio/wav' });
+        blob.arrayBuffer().then(buffer => {
+          ws.send(buffer);
+        });
+        chunks = [];
+      };
+
+      setTimeout(() => {
+        mediaRecorder.stop();
+      }, 5000);  // Record for 5 seconds
+    };
+
+    ws.onmessage = e => {
+      const data = JSON.parse(e.data);
+      transcript.textContent = data.transcript;
+      reply.textContent = data.reply;
+
+      const audio = new Audio("data:audio/mp3;base64," + data.audio);
+      audioPlayer.src = audio.src;
+      audioPlayer.play();
+    };
+  </script>
+</body>
+</html>
